@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  accounts        Account[]
+  sessions        Session[]
+  gamesAsPlayerX  Game[]    @relation("PlayerXGames")
+  gamesAsPlayerO  Game[]    @relation("PlayerOGames")
+  gameRooms       GameRoom[]
+  moves           Move[]
+  gameResults     GameResult[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtokens")
+}
+
+model Game {
+  id          String   @id @default(cuid())
+  variant     String   // classic, extended4, extended5, connect4, 3d
+  mode        String   // offline, online
+  status      String   // waiting, playing, finished, draw
+  board       String   // JSON string of board state
+  currentPlayer String @default("X")
+  winner      String?
+  moves       String   // JSON string of moves array
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Player relationships
+  playerXId   String?  @map("player_x_id")
+  playerOId   String?  @map("player_o_id")
+  playerX     User?    @relation("PlayerXGames", fields: [playerXId], references: [id])
+  playerO     User?    @relation("PlayerOGames", fields: [playerOId], references: [id])
+  
+  // Room relationship
+  roomId      String?  @map("room_id")
+  room        GameRoom? @relation(fields: [roomId], references: [id])
+  
+  // Related data
+  gameMoves   Move[]
+  result      GameResult?
+
+  @@map("games")
+}
+
+model GameRoom {
+  id          String   @id @default(cuid())
+  name        String
+  variant     String   // classic, extended4, extended5, connect4, 3d
+  maxPlayers  Int      @default(2) @map("max_players")
+  status      String   // waiting, playing, finished
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Host relationship
+  hostId      String   @map("host_id")
+  host        User     @relation(fields: [hostId], references: [id])
+  
+  // Players in room
+  players     User[]
+  
+  // Game relationship
+  gameId      String?  @unique @map("game_id")
+  game        Game?
+
+  @@map("game_rooms")
+}
+
+model Move {
+  id        String   @id @default(cuid())
+  gameId    String   @map("game_id")
+  playerId  String   @map("player_id")
+  position  String   // JSON string of {row, col, layer?}
+  timestamp DateTime @default(now())
+  
+  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player User @relation(fields: [playerId], references: [id])
+
+  @@map("moves")
+}
+
+model GameResult {
+  id          String   @id @default(cuid())
+  gameId      String   @unique @map("game_id")
+  variant     String   // classic, extended4, extended5, connect4, 3d
+  winner      String?  // X, O, or null for draw
+  players     String   // JSON array of player IDs
+  moves       Int      // Number of moves made
+  duration    Int      // Game duration in seconds
+  timestamp   DateTime @default(now())
+  
+  game   Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user   User @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+
+  @@map("game_results")
+}
+
+model Leaderboard {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  username        String
+  totalGames      Int      @default(0) @map("total_games")
+  gamesWon        Int      @default(0) @map("games_won")
+  gamesLost       Int      @default(0) @map("games_lost")
+  gamesDrawn      Int      @default(0) @map("games_drawn")
+  winRate         Float    @default(0) @map("win_rate")
+  currentStreak   Int      @default(0) @map("current_streak")
+  bestStreak      Int      @default(0) @map("best_streak")
+  totalPlayTime   Int      @default(0) @map("total_play_time") // in seconds
+  lastActive      DateTime @default(now()) @map("last_active")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("leaderboards")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  roomId    String   @map("room_id")
+  userId    String   @map("user_id")
+  username  String
+  message   String
+  timestamp DateTime @default(now())
+
+  @@map("chat_messages")
+  @@index([roomId, timestamp])
+}
