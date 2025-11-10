@@ -18,4 +18,6 @@ export interface ButtonProps extends BaseComponentProps {
 export type ticPlayer = 'X' | 'O'
 export type ticCell = ticPlayer | null
 export type ticBoard = ticCell[]
-export type winer = ticPlayer | "Draw"
+export type winer = ticPlayer | "Draw" | null
+export type mode = 'local' | 'cpu' | 'online'
+export type difficulty = 'easy' | 'medium' | 'hard' | null
