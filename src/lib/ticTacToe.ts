@@ -1,119 +1,102 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { winPatterns } from './lib';
-import { ticPlayer, ticBoard, winer, difficulty, mode } from './type'
-// ofline mode
+import { ticPlayer, ticBoard, winer, difficulty, mode } from './type';
+
+// 🟢 Reset board
 function resetBoard(setBoard: (board: ticBoard) => void) {
-  setBoard(Array(9).fill(null))
+  setBoard(Array(9).fill(null));
 }
 
-
-
+// 🟢 Switch player turn
 function howsTurn(turn: ticPlayer, setTurn: (turn: ticPlayer) => void) {
-  if (turn === 'X') {
-    setTurn('O')
-  } else {
-    setTurn('X')
-  }
+  setTurn(turn === 'X' ? 'O' : 'X');
 }
 
-function localMakeMove(index: number, board: ticBoard, setBoard: (board: ticBoard) => void, turn: ticPlayer, setTurn: (turn: ticPlayer) => void, setWin: (winer: winer) => void) {
+// 🟢 Local (offline) move handler
+function localMakeMove(
+  index: number,
+  board: ticBoard,
+  setBoard: (board: ticBoard) => void,
+  turn: ticPlayer,
+  setTurn: (turn: ticPlayer) => void,
+  setWin: (w: winer) => void
+) {
   const newBoard = [...board];
   newBoard[index] = turn;
   setBoard(newBoard);
   checkWin(newBoard, setWin);
-  howsTurn(turn, setTurn)
-
+  howsTurn(turn, setTurn);
 }
 
-
-function checkWin(board: ticBoard, setWin: (winer: winer) => void) {
-  winPatterns.forEach(pattern => {
-    const [a, b, c] = pattern;
+// 🟢 Win Checker
+function checkWin(board: ticBoard, setWin: (w: winer) => void) {
+  for (const [a, b, c] of winPatterns) {
     if (board[a] && board[a] === board[b] && board[a] === board[c]) {
       setWin(board[a]);
-      return
+      return;
     }
-  });
+  }
   if (!board.includes(null)) {
     setWin('Draw');
   }
 }
 
+export { resetBoard, checkWin };
 
-export { resetBoard, checkWin }
+// 🧠 AI (CPU) LOGIC
 
-// cpu mode
-
-
-
-function easyCpuMode(board: ticBoard, setBoard: (board: ticBoard) => void) {
-  const emptyIndexes = board.map((v, i) => v === null ? i : -1).filter(i => i !== -1);
-  const randomIndex = emptyIndexes[Math.floor(Math.random() * emptyIndexes.length)];
-  board[randomIndex] = 'O'
-  setBoard(board)
-
-
+// --- Utility: find empty spots ---
+function getEmptyIndexes(board: ticBoard): number[] {
+  return board.map((v, i) => (v === null ? i : -1)).filter((i) => i !== -1);
 }
 
-function isCpuCanWin(board: ticBoard): [boolean, number] {
+function getRandomEmptyIndex(board: ticBoard): number {
+  const empties = getEmptyIndexes(board);
+  if (empties.length === 0) return -1;
+  return empties[Math.floor(Math.random() * empties.length)];
+}
+
+// --- EASY mode ---
+function easyCpuMove(board: ticBoard): number {
+  return getRandomEmptyIndex(board);
+}
+
+// --- MEDIUM mode ---
+function mediumCpuMove(board: ticBoard): number {
   for (const [a, b, c] of winPatterns) {
-    if (board[a] === 'O' && board[b] === 'O' && board[c] === null) return [true, c];
-    if (board[a] === 'O' && board[c] === 'O' && board[b] === null) return [true, b];
-    if (board[b] === 'O' && board[c] === 'O' && board[a] === null) return [true, a];
+    if (board[a] === 'O' && board[b] === 'O' && board[c] === null) return c;
+    if (board[a] === 'O' && board[c] === 'O' && board[b] === null) return b;
+    if (board[b] === 'O' && board[c] === 'O' && board[a] === null) return a;
   }
-  return [false, -1];
-}
 
-function isPlayerCanWin(board: ticBoard): [boolean, number] {
   for (const [a, b, c] of winPatterns) {
-    if (board[a] === 'X' && board[b] === 'X' && board[c] === null) return [true, c];
-    if (board[a] === 'X' && board[c] === 'X' && board[b] === null) return [true, b];
-    if (board[b] === 'X' && board[c] === 'X' && board[a] === null) return [true, a];
+    if (board[a] === 'X' && board[b] === 'X' && board[c] === null) return c;
+    if (board[a] === 'X' && board[c] === 'X' && board[b] === null) return b;
+    if (board[b] === 'X' && board[c] === 'X' && board[a] === null) return a;
   }
-  return [false, -1];
+
+  return getRandomEmptyIndex(board);
 }
 
-function mediumCpuMode(board: ticBoard, setBoard: (board: ticBoard) => void) {
-  const [cpuCanWin, winIndex] = isCpuCanWin(board);
-  const [playerCanWin, blockIndex] = isPlayerCanWin(board);
-
-  if (cpuCanWin && winIndex !== -1) {
-    board[winIndex] = 'O';
-  } else if (playerCanWin && blockIndex !== -1) {
-    board[blockIndex] = 'O';
-  } else {
-    easyCpuMode(board, setBoard);
-    return;
-  }
-}
-
+// --- HARD mode: Minimax ---
 function evaluate(board: ticBoard): number {
   for (const [a, b, c] of winPatterns) {
     if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-      if (board[a] === 'O') {
-        return -10
-      } else {
-        return 10
-      }
+      if (board[a] === 'O') return -10;
+      if (board[a] === 'X') return 10;
     }
-  };
-  return 0
+  }
+  return 0;
 }
 
 function isMovesLeft(board: ticBoard): boolean {
-  for (const p of board) {
-    if (!p) return true
-  }
-  return false
+  return board.some((cell) => cell === null);
 }
 
 function minimax(board: ticBoard, depth: number, isMax: boolean): number {
-  const s = evaluate(board);
-  const isMove = isMovesLeft(board);
-
-  // حالت پایانی (برد یا مساوی)
-  if (s === 10 || s === -10) return s;
-  if (!isMove) return 0;
+  const score = evaluate(board);
+  if (score === 10 || score === -10) return score;
+  if (!isMovesLeft(board)) return 0;
 
   if (isMax) {
     let best = -Infinity;
@@ -138,64 +121,90 @@ function minimax(board: ticBoard, depth: number, isMax: boolean): number {
   }
 }
 
-
 function findBestMove(board: ticBoard): number {
   let bestVal = Infinity;
-  let bestMove = -1
+  let bestMove = -1;
 
   for (let i = 0; i < 9; i++) {
     if (!board[i]) {
-      board[i] = 'O'
-      const moveVal = minimax(board, 0, true)
-      board[i] = null
+      board[i] = 'O';
+      const moveVal = minimax(board, 0, true);
+      board[i] = null;
       if (moveVal < bestVal) {
         bestVal = moveVal;
         bestMove = i;
       }
     }
   }
-
-  return bestMove
+  return bestMove;
 }
 
-function hardCpuMode(board: ticBoard, setBoard: (board: ticBoard) => void) {
-  const bestMove = findBestMove(board);
-  board[bestMove] = 'O';
-  setBoard([...board])
-  return
-}
+// --- Main CPU handler ---
+function cpuMakeMove(
+  index: number,
+  board: ticBoard,
+  setBoard: (board: ticBoard) => void,
+  winner: winer,
+  setWin: (w: winer) => void,
+  difficulty: difficulty
+) {
+  if (winner || board[index]) return;
 
-function cpuMakeMove(index: number, board: ticBoard, setBoard: (board: ticBoard) => void, winner: winer, setWin: (winer: winer) => void, difficulty: difficulty) {
-  if (!winner && !board[index]) {
-    // handel player move
-    const newBoard = [...board];
-    newBoard[index] = 'X';
-    setBoard(newBoard);
-    checkWin(newBoard, setWin);
+  const newBoard = [...board];
+  newBoard[index] = 'X';
+  setBoard([...newBoard]);
+  checkWin(newBoard, setWin);
 
-    // handle cpu move
-    if (difficulty === 'easy') {
-      easyCpuMode(newBoard, setBoard)
-    } else if (difficulty === 'medium') {
-      mediumCpuMode(newBoard, setBoard)
-    } else if (difficulty === 'hard') {
-      hardCpuMode(board, setBoard)
-    }
-    setBoard([...board]);
-    checkWin(board, setWin);
+  const playerWon = winPatterns.some(([a, b, c]) => {
+    return (
+      newBoard[a] &&
+      newBoard[a] === 'X' &&
+      newBoard[a] === newBoard[b] &&
+      newBoard[a] === newBoard[c]
+    );
+  });
+  if (playerWon) return;
+
+  let moveIndex = -1;
+  switch (difficulty) {
+    case 'easy':
+      moveIndex = easyCpuMove(newBoard);
+      break;
+    case 'medium':
+      moveIndex = mediumCpuMove(newBoard);
+      break;
+    case 'hard':
+      moveIndex = findBestMove(newBoard);
+      break;
   }
 
+  if (moveIndex === -1) return;
+
+  const updated = [...newBoard];
+  updated[moveIndex] = 'O';
+  setBoard(updated);
+  checkWin(updated, setWin);
 }
 
+// 🟢 Public interface
+function makeMove(
+  index: number,
+  board: ticBoard,
+  setBoard: (board: ticBoard) => void,
+  turn: ticPlayer,
+  setTurn: (turn: ticPlayer) => void,
+  winner: winer,
+  setWin: (w: winer) => void,
+  mode: mode,
+  difficulty: difficulty
+) {
+  if (winner || board[index]) return;
 
-function makeMove(index: number, board: ticBoard, setBoard: (board: ticBoard) => void, turn: ticPlayer, setTurn: (turn: ticPlayer) => void, winner: winer, setWin: (winer: winer) => void, mode: mode, difficulty: difficulty) {
-  if (!winner && !board[index] && mode === 'local') {
-    localMakeMove(index, board, setBoard, turn, setTurn, setWin)
-
-  }
-  if (mode === 'cpu' && difficulty) {
-    cpuMakeMove(index, board, setBoard, winner, setWin, difficulty)
+  if (mode === 'local') {
+    localMakeMove(index, board, setBoard, turn, setTurn, setWin);
+  } else if (mode === 'cpu' && difficulty) {
+    cpuMakeMove(index, board, setBoard, winner, setWin, difficulty);
   }
 }
 
-export { makeMove }
+export { makeMove };
