@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { winPatterns } from './lib';
 import { ticPlayer, ticBoard, winer, difficulty, mode } from './type';
 

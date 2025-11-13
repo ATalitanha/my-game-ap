@@ -31,7 +31,7 @@ export default function TicTacToeUI() {
     checkWin(board, setWin);
   }, [board]);
 
-  // ریست
+  // ریست بازی
   const handleReset = () => {
     resetBoard(setBoard);
     setWin(null);
@@ -45,13 +45,13 @@ export default function TicTacToeUI() {
   if (mode === "menu") {
     return (
       <div className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden">
+        {/* نئون داینامیک */}
         <div
           className="pointer-events-none fixed inset-0 z-50 transition-opacity duration-300"
           style={{
-            background: `radial-gradient(600px at ${mousePos.x}px ${mousePos.y}px, rgba(120, 119, 198, 0.15) 0%, rgba(120, 119, 198, 0)  50%)`
+            background: `radial-gradient(600px at ${mousePos.x}px ${mousePos.y}px, rgba(120, 119, 198, 0.15) 0%, rgba(120, 119, 198, 0) 50%)`
           }}
         />
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -61,13 +61,22 @@ export default function TicTacToeUI() {
             🎮 Tic Tac Toe
           </h1>
           <div className="flex flex-col gap-4 w-64">
-            <Button onClick={() => setMode("local")} className="bg-purple-600/80 hover:bg-purple-700 text-white text-lg py-3 rounded-xl">
+            <Button
+              onClick={() => setMode("local")}
+              className="bg-purple-600/80 hover:bg-purple-700 text-white text-lg py-3 rounded-xl"
+            >
               👥 Local Mode
             </Button>
-            <Button onClick={() => setMode("cpu")} className="bg-blue-600/80 hover:bg-blue-700 text-white text-lg py-3 rounded-xl">
+            <Button
+              onClick={() => setMode("cpu")}
+              className="bg-blue-600/80 hover:bg-blue-700 text-white text-lg py-3 rounded-xl"
+            >
               🧠 Vs CPU
             </Button>
-            <Button onClick={() => setMode("online")} className="bg-pink-600/80 hover:bg-pink-700 text-white text-lg py-3 rounded-xl">
+            <Button
+              onClick={() => setMode("online")}
+              className="bg-pink-600/80 hover:bg-pink-700 text-white text-lg py-3 rounded-xl"
+            >
               🌐 Online
             </Button>
           </div>
@@ -77,7 +86,7 @@ export default function TicTacToeUI() {
   }
 
   // ----------------------------
-  // انتخاب سطح سختی برای CPU
+  // انتخاب سطح سختی CPU
   // ----------------------------
   if (mode === "cpu" && !cpuDifficultySelected) {
     return (
@@ -85,7 +94,7 @@ export default function TicTacToeUI() {
         <div
           className="pointer-events-none fixed inset-0 z-50 transition-opacity duration-300"
           style={{
-            background: `radial-gradient(600px at ${mousePos.x}px ${mousePos.y}px, rgba(120, 119, 198, 0.15) 0%, rgba(120, 119, 198, 0)  50%)`
+            background: `radial-gradient(600px at ${mousePos.x}px ${mousePos.y}px, rgba(120, 119, 198, 0.15) 0%, rgba(120, 119, 198, 0) 50%)`
           }}
         />
         <motion.div
@@ -99,14 +108,19 @@ export default function TicTacToeUI() {
             <Button onClick={() => { setDifficulty("medium"); setCpuDifficultySelected(true); }} className="bg-yellow-600/80 hover:bg-yellow-700 text-white text-lg py-3 rounded-xl">🧩 Medium</Button>
             <Button onClick={() => { setDifficulty("hard"); setCpuDifficultySelected(true); }} className="bg-red-600/80 hover:bg-red-700 text-white text-lg py-3 rounded-xl">🔥 Hard</Button>
           </div>
-          <Button onClick={() => { setMode("menu"); setCpuDifficultySelected(false); }} className="mt-6 bg-gray-700/70 hover:bg-gray-600 text-white">⬅ Back</Button>
+          <Button
+            onClick={() => { setMode("menu"); setCpuDifficultySelected(false); }}
+            className="mt-6 bg-gray-700/70 hover:bg-gray-600 text-white"
+          >
+            ⬅ Back
+          </Button>
         </motion.div>
       </div>
     );
   }
 
   // ----------------------------
-  // بورد بازی (Local یا CPU)
+  // صفحه اصلی بازی
   // ----------------------------
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden">
@@ -114,10 +128,9 @@ export default function TicTacToeUI() {
       <div
         className="pointer-events-none fixed inset-0 z-50 transition-opacity duration-300"
         style={{
-          background: `radial-gradient(600px at ${mousePos.x}px ${mousePos.y}px, rgba(120, 119, 198, 0.15) 0%, rgba(120, 119, 198, 0)  50%)`
+          background: `radial-gradient(600px at ${mousePos.x}px ${mousePos.y}px, rgba(120, 119, 198, 0.15) 0%, rgba(120, 119, 198, 0) 50%)`
         }}
       />
-
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -149,10 +162,16 @@ export default function TicTacToeUI() {
 
         {/* دکمه‌ها */}
         <div className="flex gap-4 mt-4">
-          <Button onClick={handleReset} className="bg-purple-600/80 hover:bg-purple-700 text-white px-6 py-2 rounded-full">
+          <Button
+            onClick={handleReset}
+            className="bg-purple-600/80 hover:bg-purple-700 text-white px-6 py-2 rounded-full"
+          >
             🔁 Reset
           </Button>
-          <Button onClick={() => { setMode("menu"); setCpuDifficultySelected(false); }} className="bg-gray-700/70 hover:bg-gray-600 text-white px-6 py-2 rounded-full">
+          <Button
+            onClick={() => { setMode("menu"); setCpuDifficultySelected(false); }}
+            className="bg-gray-700/70 hover:bg-gray-600 text-white px-6 py-2 rounded-full"
+          >
             🏠 Menu
           </Button>
         </div>
